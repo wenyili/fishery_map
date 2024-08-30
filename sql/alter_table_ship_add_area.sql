@@ -1,0 +1,1 @@
+ALTER TABLE Ships ADD area INT;
