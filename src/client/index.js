@@ -1,12 +1,12 @@
 const area = require('@/data/area.json');
 const infoElement = document.getElementById("info");
 
-const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
-const tenDaysAgoBejing = new Date(tenDaysAgo.getTime() + 8 * 60 * 60 * 1000);
+const oneDaysAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+const oneDaysAgoBejing = new Date(oneDaysAgo.getTime() + 8 * 60 * 60 * 1000);
 const dateInput = document.getElementById('date-input');
-dateInput.value = tenDaysAgoBejing.toISOString().slice(0, 19);
+dateInput.value = oneDaysAgoBejing.toISOString().slice(0, 19);
 const dateInputRoute = document.getElementById('date-input-route');
-dateInputRoute.value = tenDaysAgoBejing.toISOString().slice(0, 19);
+dateInputRoute.value = oneDaysAgoBejing.toISOString().slice(0, 19);
 
 const shipInput = document.getElementById('ship-input');
 const datalist = document.getElementById('ship-list');
@@ -60,7 +60,7 @@ const northEast = bounds.getNorthEast();
 drawLines()
 drawAreas()
 
-fetchLatest(tenDaysAgo.getTime());
+fetchLatest(oneDaysAgo.getTime());
 
 function createListItem(ship, marker, listContainer) {
   var listItem = document.createElement('div');
@@ -223,7 +223,7 @@ function drawLines() {
       style: {
         'background-color': 'transparent',
         'border': 'none',
-        'font-size': '15px',
+        'font-size': '30px',
         'color': 'blue'
       },
       map: map
@@ -245,7 +245,7 @@ function drawLines() {
       style: {
         'background-color': 'transparent',
         'border': 'none',
-        'font-size': '15px',
+        'font-size': '30px',
         'color': 'blue'
       },
       map: map

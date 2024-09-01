@@ -3,10 +3,10 @@ const mysql = require('mysql2/promise');
 const path = require('path');
 
 const db = mysql.createPool({
-    host: 'xxx',
-    user: 'xxx',
-    password: 'xxx',
-    database: 'xxx',
+    host: '127.0.0.1',
+    user: 'fishery',
+    password: '123456',
+    database: 'fishery',
 });
 
 const app = express();

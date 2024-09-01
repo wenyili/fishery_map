@@ -4,10 +4,10 @@ const ships = require('./ships.json');
 const areaData = require('./area.json');
 
 const db = mysql.createPool({
-    host: 'xxx',
-    user: 'xxx',
-    password: 'xxx',
-    database: 'xxx',
+    host: '127.0.0.1',
+    user: 'fishery',
+    password: '123456',
+    database: 'fishery',
 });
 
 const getDataAndSaveToDB = async (ship) => {
