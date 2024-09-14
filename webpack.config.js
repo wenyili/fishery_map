@@ -3,9 +3,12 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   entry: './src/client/index.js',
+  entry: {
+    index: './src/client/index.js',
+  },
   output: {
     path: path.resolve(__dirname, 'public'),
-    filename: 'index.js',
+    filename: '[name].bundle.js',
   },
   module: {
     rules: [
@@ -19,13 +22,19 @@ module.exports = {
             plugins: ['babel-plugin-transform-require']
           }
         }
+      },
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader']
       }
     ]
   },
   plugins: [
     new HtmlWebpackPlugin({
       template: 'src/client/index.html',  // 指定模版文件路径
-    }),
+      filename: 'index.html',  // 输出文件名
+      chunks: ['index'],  // 指定该 HTML 文件需要包含的 chunk
+    })
   ],
   resolve: {
     alias: {
@@ -43,6 +52,6 @@ module.exports = {
           context: ['/api'], // 你的 API 路径
           target: 'http://localhost:3000',
         },
-    ],
+    ]
   },
 };

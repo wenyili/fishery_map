@@ -1,17 +1,41 @@
 const axios = require('axios');
-const mysql = require('mysql2/promise');
 const ships = require('./ships.json');
 const areaData = require('./area.json');
+const postgres = require('postgres');
+require('dotenv').config();
 
-const db = mysql.createPool({
-    host: 'xxx',
-    user: 'xxx',
-    password: 'xxx',
-    database: 'xxx',
+let { PGHOST, PGDATABASE, PGUSER, PGPASSWORD, ENDPOINT_ID } = process.env;
+PGPASSWORD = decodeURIComponent(PGPASSWORD);
+
+const sql = postgres({
+  host: PGHOST,
+  database: PGDATABASE,
+  username: PGUSER,
+  password: PGPASSWORD,
+  port: 5432,
+  ssl: 'require',
+  connection: {
+    options: `project=${ENDPOINT_ID}`,
+  },
 });
 
-const getDataAndSaveToDB = async (ship) => {
+const getUpdateTimestamp = (updatetimestamp) => {
+    if (updatetimestamp.endsWith("min")) {
+        const minutes = parseInt(updatetimestamp.replace("min", ""));
+        const updatetime = new Date();
+        updatetime.setMinutes(updatetime.getMinutes() - Math.abs(minutes));
+        return updatetime.getTime();
+    } else if (updatetimestamp.endsWith("h")) {
+        const hours = parseInt(updatetimestamp.replace("h", ""));
+        const updatetime = new Date();
+        updatetime.setHours(updatetime.getHours() - Math.abs(hours));
+        return updatetime.getTime();
+    } else {
+        return new Date().getTime();
+    }
+}
 
+const getDataAndSaveToDB = async (ship) => {
     let config = {
         method: 'post',
         maxBodyLength: Infinity,
@@ -22,7 +46,7 @@ const getDataAndSaveToDB = async (ship) => {
           'Cache-Control': 'no-cache', 
           'Connection': 'keep-alive', 
           'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8', 
-          'Cookie': 'Hm_lvt_5a549381614f27b883ebd27bf0e218a0=1724639694; HMACCOUNT=97580295C6121E28; _gcl_au=1.1.966010719.1724639694; JSESSIONID=D07F98A351BCC57C45008BB5593822E3; Hm_lpvt_5a549381614f27b883ebd27bf0e218a0=1724835266', 
+          'Cookie': 'Hm_lvt_5a549381614f27b883ebd27bf0e218a0=1725240838; HMACCOUNT=843FC992424A8454; _gcl_au=1.1.961345004.1725240838; JSESSIONID=1386FDD0D4670597C7942CA01B8D814A; TGC=TGT-144943-kIWjOwIr--vFydw2iysGtEQSRjBSCoCqLTUqOzAqDZurGakKEk4la5ySQVvKBGY5RGsiZ1y6w208fk1crZ; Hm_lpvt_5a549381614f27b883ebd27bf0e218a0=1726218365; ISCHECKURLRISK=undefined', 
           'Origin': 'https://www.hifleet.com', 
           'Pragma': 'no-cache', 
           'Referer': 'https://www.hifleet.com/', 
@@ -45,19 +69,30 @@ const getDataAndSaveToDB = async (ship) => {
         const latitudeKey = Math.floor(data.la) + (data.la % 1 >= 0.5 ? 0.5 : 0);
         const area = areaData[`[${longitudeKey}, ${latitudeKey}]`] || null;
 
-        await db.query(`
-            INSERT INTO Ships (name_en, name_zh, longitude, latitude, staticinfoupdatetime, updatetimeformat, area) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE 
-            name_en = VALUES(name_en),
-            name_zh = VALUES(name_zh),
-            longitude = VALUES(longitude),
-            latitude = VALUES(latitude),
-            staticinfoupdatetime = VALUES(staticinfoupdatetime),
-            updatetimeformat = VALUES(updatetimeformat),
-            area = VALUES(area)`,
-            [ship.name_en, ship.name_zh, data.lo, data.la, new Date(data.staticinfoupdatetime.time), data.updatetimeformat, area]
-        );
+        const updatetimestamp = data.updatetimestamp ? data.updatetimestamp : getUpdateTimestamp(data.updatetimeformat);
+        // Check if the record exists
+        const existing = await sql`SELECT 1 FROM Ships WHERE name_en = ${ship.name_en} AND staticinfoupdatetime = ${new Date(data.staticinfoupdatetime.time).toISOString()}`;
+
+        if (existing.count > 0) {
+        // Update the record
+        await sql`
+            UPDATE Ships 
+            SET name_en = ${ship.name_en},
+                name_zh = ${ship.name_zh},
+                longitude = ${data.lo},
+                latitude = ${data.la},
+                staticinfoupdatetime = ${new Date(data.staticinfoupdatetime.time).toISOString()},
+                updatetimeformat = ${data.updatetimeformat},
+                updatetimestamp = ${new Date(updatetimestamp).toISOString()},
+                area = ${area},
+                updated_at = CURRENT_TIMESTAMP
+            WHERE name_en = ${ship.name_en} AND staticinfoupdatetime = ${new Date(data.staticinfoupdatetime.time).toISOString()}`;
+        } else {
+        // Insert a new record
+        await sql`
+            INSERT INTO Ships (name_en, name_zh, longitude, latitude, staticinfoupdatetime, updatetimeformat, updatetimestamp, area, created_at)
+            VALUES (${ship.name_en}, ${ship.name_zh}, ${data.lo}, ${data.la}, ${new Date(data.staticinfoupdatetime.time).toISOString()}, ${data.updatetimeformat}, ${new Date(updatetimestamp).toISOString()}, ${area}, CURRENT_TIMESTAMP)`;
+        }
         console.log(`Ship ${ship.name_en} saved to database.`);
     } else {
         console.error(`No data found for ship: ${ship.name_en}`);
@@ -68,7 +103,7 @@ const run = async () => {
     for (const ship of ships) {
         await getDataAndSaveToDB(ship);
     }
-    await db.end();
+    await sql.end();
     console.log('All operations completed. Database connection closed.');
 };
 
