@@ -10,9 +10,9 @@ L.FisheryArea = L.GeoJSON.extend({
         },
         bounds: {
             north: 42,
-            south: 20.5,
+            south: 0,
             east: 135,
-            west: 115
+            west: 105
         }
     },
     initialize: function (options) {
