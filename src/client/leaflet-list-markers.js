@@ -10,17 +10,15 @@ import './leaflet-list-markers.css';
             layer: false,
             collapsed: true,		
             label: 'title',
-            // itemIcon: L.Icon.Default.imagePath+'/marker-icon.png',
             itemArrow: '&#10148;',	//visit: http://character-code.com/arrows-html-codes.php
-            maxZoom: 9,
             position: 'bottomright'
-            //TODO autocollapse
         },
     
         initialize: function(options) {
             L.Util.setOptions(this, options);
             this._container = null;
             this._list = null;
+            console.log(this.options.layer)
             this._layer = this.options.layer || new L.LayerGroup();
         },
     
@@ -52,7 +50,6 @@ import './leaflet-list-markers.css';
         _createItem: function(layer) {
             var li = L.DomUtil.create('li', 'list-markers-li'),
                 a = L.DomUtil.create('a', '', li),
-                // icon = this.options.itemIcon ? '<img src="'+this.options.itemIcon+'" />' : '',
                 that = this;
     
             a.href = '#';
@@ -60,7 +57,6 @@ import './leaflet-list-markers.css';
                 .disableClickPropagation(a)
                 .on(a, 'click', L.DomEvent.stop, this)
                 .on(a, 'click', function(e) {
-                    this._moveTo( layer.getLatLng() );
                     this.fire('item-click', {layer: layer });
                 }, this)
                 .on(a, 'mouseover', function(e) {
@@ -69,7 +65,13 @@ import './leaflet-list-markers.css';
                 .on(a, 'mouseout', function(e) {
                     that.fire('item-mouseout', {layer: layer });
                 }, this);			
-    
+                
+
+            // Check if layer is within bounds
+            if (that._map.getBounds().contains(layer.getLatLng())) {
+                a.style.color = "red"; // Change color to red if layer is within bounds
+            }
+            
             a.innerHTML = '<span>'+layer.feature.properties.name_zh+'</span> <b>'+this.options.itemArrow+'</b>';
             return li;
         },
@@ -80,8 +82,8 @@ import './leaflet-list-markers.css';
     
             this._list.innerHTML = '';
             this._layer.eachLayer(function(layer) {
-                if( that._map.getBounds().contains(layer.getLatLng()) )
-                    that._list.appendChild( that._createItem(layer) );
+                that._list.appendChild( that._createItem(layer) );
+                // if( that._map.getBounds().contains(layer.getLatLng()) )
             });
         },
     
@@ -101,13 +103,6 @@ import './leaflet-list-markers.css';
             } else {
                 L.DomEvent.on(container, 'click', L.DomEvent.stopPropagation);
             }
-        },
-    
-        _moveTo: function(latlng) {
-            if(this.options.maxZoom)
-                this._map.setView(latlng, Math.max(this._map.getZoom(), this.options.maxZoom) );
-            else
-                this._map.panTo(latlng);    
         }
     });
     

@@ -1,5 +1,3 @@
-const area = require('@/data/area.json');
-
 L.Ship = L.GeoJSON.extend({
     options: {
     },

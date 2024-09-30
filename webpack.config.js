@@ -52,6 +52,10 @@ module.exports = {
           context: ['/api'], // 你的 API 路径
           target: 'http://localhost:3000',
         },
+        {
+          context: ['/tms'], // 你的 API 路径
+          target: 'http://localhost:3000',
+        },
     ]
   },
 };

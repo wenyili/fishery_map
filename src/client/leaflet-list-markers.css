@@ -6,7 +6,7 @@
 	-webkit-border-radius: 4px;
 	border-radius: 4px;
 	/*background-color: rgba(0, 0, 0, 0.25);*/
-	background-color: rgba(255, 255, 255, 0.4);
+	background-color: rgba(255, 255, 255, 0.9);
 	z-index:1000;	
 	box-shadow: 0 1px 7px rgba(0,0,0,0.65);
 	margin-left:10px;
@@ -68,4 +68,5 @@
 	color: #0078A8;
 	text-decoration: none;
 	background-color: rgba(255, 255, 255, 0.8);
+	font-weight: bold;
 }

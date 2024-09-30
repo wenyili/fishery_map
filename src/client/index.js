@@ -5,10 +5,15 @@ import './leaflet-list-markers.js'
 import './info.css'
 
 const map = L.map('map').setView([29, 125], 6);
-const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(map)
+// const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+//     maxZoom: 19,
+//     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+// }).addTo(map)
+
+const tmsLayer = L.tileLayer('/tms/{z}/{x}/{y}.png', {
+    tms: true,
+    maxZoom: 12,
+}).addTo(map);
 
 L.latlngGraticule({
     showLabel: true,
@@ -24,18 +29,20 @@ const fisheryArea = L.fisheryArea({
     onEachFeature: function(feature, layer) {
         layer.on({
             mouseover: function(e) {
-                e.target.setStyle({
-                    // color: 'grey',  // change color to blue
-                    weight: 3,  // increase weight
-                    fillOpacity: 0.5,
-                    dashArray: '',
-                });
+                if (map.getZoom() < 10) {
+                    e.target.setStyle({
+                        // color: 'grey',  // change color to blue
+                        weight: 3,  // increase weight
+                        fillOpacity: 0.5,
+                        dashArray: '',
+                    });
+                }
             },
             mouseout: function(e) {
                 fisheryArea.resetStyle(e.target)
             },
             click: function(e) {
-                map.fitBounds(e.target.getBounds(), {maxZoom: Math.max(map.getZoom(), 9)});
+                map.fitBounds(e.target.getBounds(), {maxZoom: Math.max(map.getZoom(), 11)});
             }
         });
 
@@ -75,6 +82,18 @@ function getInfoData(props) {
 
 let shiplayers;
 let list;
+let clickedLayer;
+
+function clickLayer(layer) {
+    if (clickedLayer) {
+        shiplayers.resetStyle(clickedLayer)
+    }
+    layer.setStyle({
+        fillColor: '#b200ff',
+    })
+    clickedLayer = layer;
+}
+
 function fetchLatest(timestamp) {
     const url = timestamp ? '/api/latest?before=' + timestamp : '/api/latest';
     // shipLayers.clearLayers();
@@ -89,8 +108,20 @@ function fetchLatest(timestamp) {
                 onEachFeature: function(feature, layer) {
                     layer.on({
                         click: function(e) {
-                            map.setView(e.latlng, Math.max(map.getZoom(), 9));
+                            map.setView(e.latlng, Math.max(map.getZoom(), 11));
                             info.update(feature.properties);
+                            clickLayer(e.target);
+                        },
+                        mouseover: function(e) {
+                            e.target.setStyle({
+                                weight: 3,
+                            })
+                            e.target.bringToFront();
+                        },
+                        mouseout: function(e) {
+                            e.target.setStyle({
+                                weight: 1,
+                            });
                         }
                     })
                     layer.bindTooltip(function() {
@@ -105,16 +136,22 @@ function fetchLatest(timestamp) {
             list = new L.Control.ListMarkers({layer: shiplayers, itemIcon: null});
             list.on('item-mouseover', function(e) {
                 e.layer.setStyle({
-                    fillColor: '#0087ff',  // change color to blue
+                    weight: 3,
                 });
+                e.layer.bringToFront();
             })
             list.on('item-mouseout', function(e) {
                 e.layer.setStyle({
-                    fillColor: "#ff7800",
-                })
+                    weight: 1, 
+                });
             })
             list.on('item-click', function(e) {
+                e.layer.setStyle({
+                    weight: 1,
+                });
+                map.setView(e.layer.getLatLng(), Math.max(map.getZoom(), 11));
                 info.update(e.layer.feature.properties);
+                clickLayer(e.layer);
             })
             map.addControl(list);
         });

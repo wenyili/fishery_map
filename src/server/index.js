@@ -7,7 +7,7 @@ const areaData = require('../../data/area.json');
 
 const axios = require('axios');
 
-let { PGHOST, PGDATABASE, PGUSER, PGPASSWORD, ENDPOINT_ID } = process.env;
+let { PGHOST, PGDATABASE, PGUSER, PGPASSWORD, ENDPOINT_ID, NOVIONICS_DICT } = process.env;
 PGPASSWORD = decodeURIComponent(PGPASSWORD);
 
 const sql = postgres({
@@ -27,6 +27,8 @@ const port = 3000;
 
 // 托管静态文件
 app.use(express.static(path.join(__dirname, '../../public')));
+
+app.use('/tms/', express.static(path.join(NOVIONICS_DICT)));
 
 // Create a new router
 const apiRouter = express.Router();
@@ -48,7 +50,7 @@ apiRouter.get('/latest', async (req, res) => {
             WHERE EXTRACT(EPOCH FROM updatetimestamp) < ${before}
             GROUP BY name_en
         ) s2
-        ON s1.name_en = s2.name_en AND s1.staticinfoupdatetime = s2.max_time
+        ON s1.name_en = s2.name_en AND s1.staticinfoupdatetime = s2.max_time ORDER BY s1.name_en
     `;
     // 修改row中的updatetimeformat字段，由当前时间和updatetimestamp字段计算获得
     // 如果相差时间大于1小时，则updatetimeformat计算表达成xh(x为整数)，否则计算为xmin(x为整数)
