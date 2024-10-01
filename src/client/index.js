@@ -108,7 +108,7 @@ function fetchLatest(timestamp) {
                 onEachFeature: function(feature, layer) {
                     layer.on({
                         click: function(e) {
-                            map.setView(e.latlng, Math.max(map.getZoom(), 11));
+                            map.setView(e.latlng, Math.max(map.getZoom(), 12));
                             info.update(feature.properties);
                             clickLayer(e.target);
                         },
@@ -149,7 +149,7 @@ function fetchLatest(timestamp) {
                 e.layer.setStyle({
                     weight: 1,
                 });
-                map.setView(e.layer.getLatLng(), Math.max(map.getZoom(), 11));
+                map.setView(e.layer.getLatLng(), Math.max(map.getZoom(), 12));
                 info.update(e.layer.feature.properties);
                 clickLayer(e.layer);
             })
