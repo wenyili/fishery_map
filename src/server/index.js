@@ -7,7 +7,7 @@ const areaData = require('../../data/area.json');
 
 const axios = require('axios');
 
-let { PGHOST, PGDATABASE, PGUSER, PGPASSWORD, ENDPOINT_ID, NOVIONICS_DICT } = process.env;
+let { PGHOST, PGDATABASE, PGUSER, PGPASSWORD, ENDPOINT_ID, NAVIONICS_DICT } = process.env;
 PGPASSWORD = decodeURIComponent(PGPASSWORD);
 
 const sql = postgres({
@@ -28,7 +28,7 @@ const port = 3000;
 // 托管静态文件
 app.use(express.static(path.join(__dirname, '../../public')));
 
-app.use('/tms/', express.static(path.join(NOVIONICS_DICT)));
+app.use('/tms/', express.static(path.join(NAVIONICS_DICT)));
 
 // Create a new router
 const apiRouter = express.Router();
