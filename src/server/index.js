@@ -7,7 +7,7 @@ const areaData = require('../../data/area.json');
 
 const axios = require('axios');
 
-let { PGHOST, PGDATABASE, PGUSER, PGPASSWORD, ENDPOINT_ID, NAVIONICS_DICT } = process.env;
+let { PGHOST, PGDATABASE, PGUSER, PGPASSWORD, ENDPOINT_ID, NAVIONICS_DICT, HIFLEET_COOKIE } = process.env;
 PGPASSWORD = decodeURIComponent(PGPASSWORD);
 
 const sql = postgres({
@@ -45,12 +45,12 @@ apiRouter.get('/latest', async (req, res) => {
             EXTRACT(EPOCH FROM s1.created_at) AS created_at, EXTRACT(EPOCH FROM s1.updated_at) AS updated_at
         FROM Ships s1
         JOIN (
-            SELECT name_en, MAX(staticinfoupdatetime) AS max_time
+            SELECT name_en, MAX(updatetimestamp) AS max_time
             FROM Ships 
             WHERE EXTRACT(EPOCH FROM updatetimestamp) < ${before}
             GROUP BY name_en
         ) s2
-        ON s1.name_en = s2.name_en AND s1.staticinfoupdatetime = s2.max_time ORDER BY s1.name_en
+        ON s1.name_en = s2.name_en AND s1.updatetimestamp = s2.max_time ORDER BY s1.name_en
     `;
     // 修改row中的updatetimeformat字段，由当前时间和updatetimestamp字段计算获得
     // 如果相差时间大于1小时，则updatetimeformat计算表达成xh(x为整数)，否则计算为xmin(x为整数)
@@ -72,6 +72,23 @@ apiRouter.get('/new', async (req, res) => {
     res.json(ships);
 });
 
+const getUpdateTimestamp = (name_en, updatetimeformat) => {
+    console.log(`ship ${name_en} updatetimeformat: ${updatetimeformat}`);
+    if (updatetimeformat.endsWith("min")) {
+        const minutes = parseInt(updatetimeformat.replace("min", ""));
+        const updatetime = new Date();
+        updatetime.setMinutes(updatetime.getMinutes() - Math.abs(minutes));
+        return updatetime.getTime();
+    } else if (updatetimeformat.endsWith("h")) {
+        const hours = parseInt(updatetimeformat.replace("h", ""));
+        const updatetime = new Date();
+        updatetime.setHours(updatetime.getHours() - Math.abs(hours));
+        return updatetime.getTime();
+    } else {
+        throw new Error(`Invalid updatetimeformat: ${updatetimeformat}`);
+    }
+}
+
 const getDataAndSaveToDB = async (ship) => {
     let config = {
         method: 'post',
@@ -83,7 +100,7 @@ const getDataAndSaveToDB = async (ship) => {
           'Cache-Control': 'no-cache', 
           'Connection': 'keep-alive', 
           'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8', 
-          'Cookie': 'Hm_lvt_5a549381614f27b883ebd27bf0e218a0=1725240838; HMACCOUNT=843FC992424A8454; _gcl_au=1.1.961345004.1725240838; JSESSIONID=1386FDD0D4670597C7942CA01B8D814A; TGC=TGT-144943-kIWjOwIr--vFydw2iysGtEQSRjBSCoCqLTUqOzAqDZurGakKEk4la5ySQVvKBGY5RGsiZ1y6w208fk1crZ; Hm_lpvt_5a549381614f27b883ebd27bf0e218a0=1726218365; ISCHECKURLRISK=undefined', 
+          'Cookie': HIFLEET_COOKIE, 
           'Origin': 'https://www.hifleet.com', 
           'Pragma': 'no-cache', 
           'Referer': 'https://www.hifleet.com/', 
@@ -99,16 +116,17 @@ const getDataAndSaveToDB = async (ship) => {
     };
     const response = await axios(config);
 
-    if (response.data && response.data.staticinfoupdatetime) {
+    if (response.data) {
         const data = response.data;
 
         const longitudeKey = Math.floor(data.lo) + (data.lo % 1 >= 0.5 ? 0.5 : 0);
         const latitudeKey = Math.floor(data.la) + (data.la % 1 >= 0.5 ? 0.5 : 0);
         const area = areaData[`[${longitudeKey}, ${latitudeKey}]`] || null;
 
-        const updatetimestamp = data.updatetimestamp ? data.updatetimestamp : getUpdateTimestamp(data.updatetimeformat);
+        const updatetimestamp = data.updatetimestamp ? data.updatetimestamp : getUpdateTimestamp(ship.name_en, data.updatetimeformat);
+            
         // Check if the record exists
-        const existing = await sql`SELECT 1 FROM Ships WHERE name_en = ${ship.name_en} AND staticinfoupdatetime = ${new Date(data.staticinfoupdatetime.time).toISOString()}`;
+        const existing = await sql`SELECT 1 FROM Ships WHERE name_en = ${ship.name_en} AND updatetimestamp = ${new Date(data.updatetimestamp).toISOString()}`;
         if (existing.count > 0) {
             // Update the record
             await sql`
@@ -117,17 +135,16 @@ const getDataAndSaveToDB = async (ship) => {
                     name_zh = ${ship.name_zh},
                     longitude = ${data.lo},
                     latitude = ${data.la},
-                    staticinfoupdatetime = ${new Date(data.staticinfoupdatetime.time).toISOString()},
                     updatetimeformat = ${data.updatetimeformat},
                     updatetimestamp = ${new Date(updatetimestamp).toISOString()},
                     area = ${area},
                     updated_at = CURRENT_TIMESTAMP
-                WHERE name_en = ${ship.name_en} AND staticinfoupdatetime = ${new Date(data.staticinfoupdatetime.time).toISOString()}`;
+                WHERE name_en = ${ship.name_en} AND updatetimestamp = ${new Date(data.updatetimestamp).toISOString()}`;
         } else {
             // Insert a new record
             await sql`
-                INSERT INTO Ships (name_en, name_zh, longitude, latitude, staticinfoupdatetime, updatetimeformat, updatetimestamp, area, created_at)
-                VALUES (${ship.name_en}, ${ship.name_zh}, ${data.lo}, ${data.la}, ${new Date(data.staticinfoupdatetime.time).toISOString()}, ${data.updatetimeformat}, ${new Date(updatetimestamp).toISOString()}, ${area}, CURRENT_TIMESTAMP)`;
+                INSERT INTO Ships (name_en, name_zh, longitude, latitude, updatetimeformat, updatetimestamp, area, created_at)
+                VALUES (${ship.name_en}, ${ship.name_zh}, ${data.lo}, ${data.la}, ${data.updatetimeformat}, ${new Date(updatetimestamp).toISOString()}, ${area}, CURRENT_TIMESTAMP)`;
         }
         console.log(`Ship ${ship.name_en} saved to database.`);
     } else {

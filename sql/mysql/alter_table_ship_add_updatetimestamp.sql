@@ -1,1 +1,0 @@
-ALTER TABLE Ships ADD updatetimestamp TIMESTAMP NULL DEFAULT NULL;
