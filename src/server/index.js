@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const postgres = require('postgres');
+const fs = require('fs');
 require('dotenv').config();
 const ships = require('../../data/ships.json');
 const areaData = require('../../data/area.json');
@@ -29,6 +30,21 @@ const sql = postgres(postgresConfig);
 
 const app = express();
 const port = 3000;
+
+// 数据库初始化函数
+const initializeDatabase = async () => {
+  try {
+    // 检查Ships表是否存在
+    await sql`SELECT 1 FROM Ships LIMIT 1`;
+    console.log('Database tables already exist, skipping initialization');
+  } catch (error) {
+    // 表不存在，执行初始化
+    console.log('Ships table not found, initializing database...');
+    const initSQL = fs.readFileSync(path.join(__dirname, '../../sql/init.sql'), 'utf8');
+    await sql.unsafe(initSQL);
+    console.log('Database initialized successfully');
+  }
+};
 
 // 托管静态文件
 app.use(express.static(path.join(__dirname, '../../public')));
@@ -159,6 +175,17 @@ const getDataAndSaveToDB = async (ship) => {
 // Use the router with /api prefix
 app.use('/api', apiRouter);
 
-app.listen(port, () => {
-    console.log(`Server is running at http://localhost:${port}`);
-});
+// 启动服务器
+const startServer = async () => {
+  try {
+    await initializeDatabase();
+    app.listen(port, () => {
+      console.log(`Server is running at http://localhost:${port}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();

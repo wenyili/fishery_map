@@ -6,10 +6,9 @@ CREATE TABLE Ships (
   area INTEGER,
   updatetimestamp TIMESTAMP,
   updatetimeformat VARCHAR(32),
-  staticinfoupdatetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (name_en, staticinfoupdatetime)
+  PRIMARY KEY (name_en, updatetimestamp)
 );
 
 CREATE INDEX idx_name_en ON Ships (name_en);
