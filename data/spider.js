@@ -7,17 +7,22 @@ require('dotenv').config();
 let { PGHOST, PGDATABASE, PGUSER, PGPASSWORD, ENDPOINT_ID, HIFLEET_COOKIE } = process.env;
 PGPASSWORD = decodeURIComponent(PGPASSWORD);
 
-const sql = postgres({
+const postgresConfig = {
   host: PGHOST,
   database: PGDATABASE,
   username: PGUSER,
   password: PGPASSWORD,
   port: 5432,
   ssl: 'require',
-  connection: {
+};
+
+if (ENDPOINT_ID) {
+  postgresConfig.connection = {
     options: `project=${ENDPOINT_ID}`,
-  },
-});
+  };
+}
+
+const sql = postgres(postgresConfig);
 
 const getUpdateTimestamp = (name_en, updatetimeformat) => {
     console.log(`ship ${name_en} updatetimeformat: ${updatetimeformat}`);

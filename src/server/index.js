@@ -10,17 +10,22 @@ const axios = require('axios');
 let { PGHOST, PGDATABASE, PGUSER, PGPASSWORD, ENDPOINT_ID, NAVIONICS_DICT, HIFLEET_COOKIE } = process.env;
 PGPASSWORD = decodeURIComponent(PGPASSWORD);
 
-const sql = postgres({
+const postgresConfig = {
   host: PGHOST,
   database: PGDATABASE,
   username: PGUSER,
   password: PGPASSWORD,
   port: 5432,
   ssl: 'require',
-  connection: {
+};
+
+if (ENDPOINT_ID) {
+  postgresConfig.connection = {
     options: `project=${ENDPOINT_ID}`,
-  },
-});
+  };
+}
+
+const sql = postgres(postgresConfig);
 
 const app = express();
 const port = 3000;

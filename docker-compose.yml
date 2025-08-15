@@ -1,0 +1,29 @@
+services:
+  app:
+    build: .
+    environment:
+      - PGHOST=postgres
+      - PGDATABASE=${PGDATABASE}
+      - PGUSER=${PGUSER}
+      - PGPASSWORD=${PGPASSWORD}
+      - ENDPOINT_ID=${ENDPOINT_ID}
+      - NAVIONICS_DICT=/app/tiles
+      - HIFLEET_COOKIE=${HIFLEET_COOKIE}
+    volumes:
+      - ${NAVIONICS_DICT_HOST}:/app/tiles:ro
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.fishery-map.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.fishery-map.entrypoints=websecure"
+      - "traefik.http.routers.fishery-map.tls.certresolver=letsencrypt"
+      - "traefik.http.services.fishery-map.loadbalancer.server.port=3000"
+    networks:
+      - traefik
+      - internal
+
+networks:
+  traefik:
+    external: true
+  internal:
+    external: true
