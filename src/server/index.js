@@ -17,7 +17,7 @@ const postgresConfig = {
   username: PGUSER,
   password: PGPASSWORD,
   port: 5432,
-  ssl: 'require',
+  ssl: false,
 };
 
 if (ENDPOINT_ID) {
@@ -38,11 +38,21 @@ const initializeDatabase = async () => {
     await sql`SELECT 1 FROM Ships LIMIT 1`;
     console.log('Database tables already exist, skipping initialization');
   } catch (error) {
-    // 表不存在，执行初始化
-    console.log('Ships table not found, initializing database...');
-    const initSQL = fs.readFileSync(path.join(__dirname, '../../sql/init.sql'), 'utf8');
-    await sql.unsafe(initSQL);
-    console.log('Database initialized successfully');
+    // 检查是否是因为表不存在的错误
+    if (error.code === '42P01' || error.message.includes('relation "ships" does not exist')) {
+      console.log('Ships table not found, initializing database...');
+      try {
+        const initSQL = fs.readFileSync(path.join(__dirname, '../../sql/init.sql'), 'utf8');
+        await sql.unsafe(initSQL);
+        console.log('Database initialized successfully');
+      } catch (initError) {
+        console.error('Failed to initialize database:', initError);
+        throw initError;
+      }
+    } else {
+      console.error('Database connection or query error:', error);
+      throw error;
+    }
   }
 };
 
@@ -104,6 +114,11 @@ const getUpdateTimestamp = (name_en, updatetimeformat) => {
         const hours = parseInt(updatetimeformat.replace("h", ""));
         const updatetime = new Date();
         updatetime.setHours(updatetime.getHours() - Math.abs(hours));
+        return updatetime.getTime();
+    } else if (updatetimeformat.endsWith("d")) {
+        const days = parseInt(updatetimeformat.replace("d", ""));
+        const updatetime = new Date();
+        updatetime.setDate(updatetime.getDate() - Math.abs(days));
         return updatetime.getTime();
     } else {
         throw new Error(`Invalid updatetimeformat: ${updatetimeformat}`);

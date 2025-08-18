@@ -13,7 +13,7 @@ const postgresConfig = {
   username: PGUSER,
   password: PGPASSWORD,
   port: 5432,
-  ssl: 'require',
+  ssl: false,
 };
 
 if (ENDPOINT_ID) {
@@ -35,6 +35,11 @@ const getUpdateTimestamp = (name_en, updatetimeformat) => {
         const hours = parseInt(updatetimeformat.replace("h", ""));
         const updatetime = new Date();
         updatetime.setHours(updatetime.getHours() - Math.abs(hours));
+        return updatetime.getTime();
+    } else if (updatetimeformat.endsWith("d")) {
+        const days = parseInt(updatetimeformat.replace("d", ""));
+        const updatetime = new Date();
+        updatetime.setDate(updatetime.getDate() - Math.abs(days));
         return updatetime.getTime();
     } else {
         throw new Error(`Invalid updatetimeformat: ${updatetimeformat}`);
