@@ -27,3 +27,4 @@ networks:
     external: true
   internal:
     external: true
+    name: infrastructure_internal
