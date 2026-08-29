@@ -572,6 +572,10 @@
         "name_zh": "闽莆渔28895"
     },
     {
+        "name_en": "MINJINYU05318",
+        "name_zh": "闽晋渔05318"
+    },
+    {
         "name_en": "MINJINYU05686",
         "name_zh": "闽晋渔05686"
     },
@@ -586,6 +590,10 @@
     {
         "name_en": "MINXIAYU08156",
         "name_zh": "闽霞渔08156"
+    },
+    {
+        "name_en": "MINXIAYU01997",
+        "name_zh": "闽霞渔01997"
     },
     {
         "name_en": "MINPUYU26882",
@@ -622,5 +630,37 @@
     {
         "name_en": "MINPUYU26892",
         "name_zh": "闽莆渔26892"
+    },
+    {
+        "name_en": "MINXIAYU01995",
+        "name_zh": "闽霞渔01995"
+    },
+    {
+        "name_en": "MINXIAYU08298",
+        "name_zh": "闽霞渔08298"
+    },
+    {
+        "name_en": "MINXIAYU01925",
+        "name_zh": "闽霞渔01925"
+    },
+    {
+        "name_en": "MINXIAYU01083",
+        "name_zh": "闽霞渔01083"
+    },
+    {
+        "name_en": "MINXIAYU01973",
+        "name_zh": "闽霞渔01973"
+    },
+    {
+        "name_en": "MINXIAYU01953",
+        "name_zh": "闽霞渔01953"
+    },
+    {
+        "name_en": "MINXIAYU01995",
+        "name_zh": "闽霞渔01995"
+    },
+    {
+        "name_en": "MINJINYU05137",
+        "name_zh": "闽晋渔05137"
     }
 ]
