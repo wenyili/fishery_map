@@ -3,3 +3,8 @@ node_modules
 public
 .cache
 .env
+# macOS Finder files
+.DS_Store
+.claude
+logs
+navionics.tar.gz

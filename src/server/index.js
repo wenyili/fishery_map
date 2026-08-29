@@ -150,41 +150,45 @@ const getDataAndSaveToDB = async (ship) => {
         },
         data : `keyword=${ship.name_en}`
     };
-    const response = await axios(config);
+    try {
+        const response = await axios(config);
 
-    if (response.data) {
-        const data = response.data;
+        if (response.data) {
+            const data = response.data;
 
-        const longitudeKey = Math.floor(data.lo) + (data.lo % 1 >= 0.5 ? 0.5 : 0);
-        const latitudeKey = Math.floor(data.la) + (data.la % 1 >= 0.5 ? 0.5 : 0);
-        const area = areaData[`[${longitudeKey}, ${latitudeKey}]`] || null;
+            const longitudeKey = Math.floor(data.lo) + (data.lo % 1 >= 0.5 ? 0.5 : 0);
+            const latitudeKey = Math.floor(data.la) + (data.la % 1 >= 0.5 ? 0.5 : 0);
+            const area = areaData[`[${longitudeKey}, ${latitudeKey}]`] || null;
 
-        const updatetimestamp = data.updatetimestamp ? data.updatetimestamp : getUpdateTimestamp(ship.name_en, data.updatetimeformat);
-            
-        // Check if the record exists
-        const existing = await sql`SELECT 1 FROM Ships WHERE name_en = ${ship.name_en} AND updatetimestamp = ${new Date(data.updatetimestamp).toISOString()}`;
-        if (existing.count > 0) {
-            // Update the record
-            await sql`
-                UPDATE Ships 
-                SET name_en = ${ship.name_en},
-                    name_zh = ${ship.name_zh},
-                    longitude = ${data.lo},
-                    latitude = ${data.la},
-                    updatetimeformat = ${data.updatetimeformat},
-                    updatetimestamp = ${new Date(updatetimestamp).toISOString()},
-                    area = ${area},
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE name_en = ${ship.name_en} AND updatetimestamp = ${new Date(data.updatetimestamp).toISOString()}`;
+            const updatetimestamp = data.updatetimestamp ? data.updatetimestamp : getUpdateTimestamp(ship.name_en, data.updatetimeformat);
+
+            // Check if the record exists
+            const existing = await sql`SELECT 1 FROM Ships WHERE name_en = ${ship.name_en} AND updatetimestamp = ${new Date(data.updatetimestamp).toISOString()}`;
+            if (existing.count > 0) {
+                // Update the record
+                await sql`
+                    UPDATE Ships
+                    SET name_en = ${ship.name_en},
+                        name_zh = ${ship.name_zh},
+                        longitude = ${data.lo},
+                        latitude = ${data.la},
+                        updatetimeformat = ${data.updatetimeformat},
+                        updatetimestamp = ${new Date(updatetimestamp).toISOString()},
+                        area = ${area},
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE name_en = ${ship.name_en} AND updatetimestamp = ${new Date(data.updatetimestamp).toISOString()}`;
+            } else {
+                // Insert a new record
+                await sql`
+                    INSERT INTO Ships (name_en, name_zh, longitude, latitude, updatetimeformat, updatetimestamp, area, created_at)
+                    VALUES (${ship.name_en}, ${ship.name_zh}, ${data.lo}, ${data.la}, ${data.updatetimeformat}, ${new Date(updatetimestamp).toISOString()}, ${area}, CURRENT_TIMESTAMP)`;
+            }
+            console.log(`Ship ${ship.name_en} saved to database.`);
         } else {
-            // Insert a new record
-            await sql`
-                INSERT INTO Ships (name_en, name_zh, longitude, latitude, updatetimeformat, updatetimestamp, area, created_at)
-                VALUES (${ship.name_en}, ${ship.name_zh}, ${data.lo}, ${data.la}, ${data.updatetimeformat}, ${new Date(updatetimestamp).toISOString()}, ${area}, CURRENT_TIMESTAMP)`;
+            console.error(`No data found for ship: ${ship.name_en}`);
         }
-        console.log(`Ship ${ship.name_en} saved to database.`);
-    } else {
-        console.error(`No data found for ship: ${ship.name_en}`);
+    } catch (error) {
+        console.error(`Error fetching data for ship ${ship.name_en}:`, error.message);
     }
 };
 // Use the router with /api prefix

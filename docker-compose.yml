@@ -1,14 +1,17 @@
+x-app-env: &app-env
+  PGHOST: postgres
+  PGDATABASE: ${PGDATABASE}
+  PGUSER: ${PGUSER}
+  PGPASSWORD: ${PGPASSWORD}
+  ENDPOINT_ID: ${ENDPOINT_ID}
+  HIFLEET_COOKIE: ${HIFLEET_COOKIE}
+
 services:
   app:
     build: .
     environment:
-      - PGHOST=postgres
-      - PGDATABASE=${PGDATABASE}
-      - PGUSER=${PGUSER}
-      - PGPASSWORD=${PGPASSWORD}
-      - ENDPOINT_ID=${ENDPOINT_ID}
-      - NAVIONICS_DICT=/app/tiles
-      - HIFLEET_COOKIE=${HIFLEET_COOKIE}
+      <<: *app-env
+      NAVIONICS_DICT: /app/tiles
     volumes:
       - ${NAVIONICS_DICT_HOST}:/app/tiles:ro
     restart: unless-stopped
@@ -18,8 +21,23 @@ services:
       - "traefik.http.routers.fishery-map.entrypoints=websecure"
       - "traefik.http.routers.fishery-map.tls.certresolver=letsencrypt"
       - "traefik.http.services.fishery-map.loadbalancer.server.port=3000"
+      # Traefik BasicAuth 保护整站
+      - "traefik.http.middlewares.fishery-auth.basicauth.realm=Fishery Map"
+      - "traefik.http.middlewares.fishery-auth.basicauth.users=${TRAEFIK_BASIC_AUTH_USERS}"
+      - "traefik.http.routers.fishery-map.middlewares=fishery-auth@docker"
     networks:
       - traefik
+      - internal
+
+  # 每日定时抓取任务，由宿主机 crontab 通过
+  # `docker compose run --rm spider` 触发，不随 `up -d` 常驻启动
+  spider:
+    build: .
+    command: ["node", "data/spider.js"]
+    environment: *app-env
+    restart: "no"
+    profiles: ["cron"]
+    networks:
       - internal
 
 networks:
@@ -27,4 +45,4 @@ networks:
     external: true
   internal:
     external: true
-    name: infrastructure_internal
+    name: self-hosted-devops_internal

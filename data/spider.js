@@ -79,7 +79,7 @@ const getDataAndSaveToDB = async (ship) => {
         const latitudeKey = Math.floor(data.la) + (data.la % 1 >= 0.5 ? 0.5 : 0);
         const area = areaData[`[${longitudeKey}, ${latitudeKey}]`] || null;
 
-        const updatetimestamp = data.updatetimestamp ? data.updatetimestamp : getUpdateTimestamp(data.updatetimeformat);
+        const updatetimestamp = data.updatetimestamp ? data.updatetimestamp : getUpdateTimestamp(ship.name_en, data.updatetimeformat);
             
         // Check if the record exists
         const existing = await sql`SELECT 1 FROM Ships WHERE name_en = ${ship.name_en} AND updatetimestamp = ${new Date(data.updatetimestamp).toISOString()}`;
@@ -111,7 +111,11 @@ const getDataAndSaveToDB = async (ship) => {
 
 const run = async () => {
     for (const ship of ships) {
-        await getDataAndSaveToDB(ship);
+        try {
+            await getDataAndSaveToDB(ship);
+        } catch (err) {
+            console.error(`Failed to process ship ${ship.name_en}:`, err);
+        }
     }
     await sql.end();
     console.log('All operations completed. Database connection closed.');
