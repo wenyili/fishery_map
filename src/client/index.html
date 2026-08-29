@@ -52,6 +52,23 @@
             #updateButton:hover {
                 background-color: #e1e6ec;
             }
+            /* 手机端（含iPad竖屏）放大日期选择器和点击弹窗文字，iPad横屏及桌面端不受影响 */
+            @media (max-width: 1023px) {
+                #sidebar {
+                    padding-top: 14px;
+                    padding-left: 54px;
+                }
+                #dateInput {
+                    font-size: 26px;
+                    padding: 8px 10px;
+                    box-sizing: border-box;
+                    max-width: calc(50vw - 60px);
+                }
+                .leaflet-tooltip {
+                    font-size: 26px;
+                    padding: 8px 10px;
+                }
+            }
         </style>
     </head>
     <body>

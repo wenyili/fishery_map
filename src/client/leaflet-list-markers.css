@@ -70,3 +70,22 @@
 	background-color: rgba(255, 255, 255, 0.8);
 	font-weight: bold;
 }
+
+/* 手机端（含iPad竖屏）放大船只列表文字，iPad横屏及桌面端不受影响 */
+@media (max-width: 1023px) {
+	.list-markers {
+		margin-left: 14px;
+		margin-top: 14px;
+	}
+	.list-markers-li img {
+		width: 16px;
+		height: 26px;
+		margin-right: 6px;
+	}
+	.list-markers-li a {
+		line-height: 34px;
+		width: 200px;
+		padding: 6px 8px;
+		font-size: 24px;
+	}
+}

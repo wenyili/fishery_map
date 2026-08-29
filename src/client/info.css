@@ -14,3 +14,17 @@
 .leaflet-interactive:focus {
     outline: none;
 }
+
+/* 手机端（含iPad竖屏）放大信息面板文字，iPad横屏及桌面端不受影响 */
+@media (max-width: 1023px) {
+    .info {
+        font-size: 26px;
+        padding: 10px 12px;
+        box-sizing: border-box;
+        max-width: calc(50vw - 20px);
+    }
+    .info h4 {
+        font-size: 28px;
+        margin: 0 0 8px;
+    }
+}
