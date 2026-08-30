@@ -74,18 +74,19 @@
 /* 手机端（含iPad竖屏）放大船只列表文字，iPad横屏及桌面端不受影响 */
 @media (max-width: 1023px) {
 	.list-markers {
-		margin-left: 14px;
-		margin-top: 14px;
+		margin-left: 10px;
+		margin-top: 10px;
+		max-height: 40vh;
 	}
 	.list-markers-li img {
-		width: 16px;
-		height: 26px;
-		margin-right: 6px;
+		width: 13px;
+		height: 22px;
+		margin-right: 4px;
 	}
 	.list-markers-li a {
-		line-height: 34px;
-		width: 200px;
-		padding: 6px 8px;
-		font-size: 24px;
+		line-height: 28px;
+		width: 160px;
+		padding: 3px 5px;
+		font-size: 20px;
 	}
 }
