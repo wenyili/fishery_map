@@ -8,7 +8,8 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, 'public'),
-    filename: '[name].bundle.js',
+    // contenthash让文件名随内容变化，避免老浏览器（树莓派Chromium）缓存旧bundle
+    filename: '[name].[contenthash].bundle.js',
   },
   module: {
     rules: [
