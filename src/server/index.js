@@ -7,7 +7,10 @@ const ships = require('../../data/ships.json');
 const areaData = require('../../data/area.json');
 
 const axios = require('axios');
-const { renderLocateImage } = require('./locate-image');
+
+// 定位图生成依赖sharp，树莓派（armv7）不安装该依赖，通过 IS_RASPBERRY_PI=true 跳过此功能
+const isRaspberryPi = process.env.IS_RASPBERRY_PI === 'true';
+const { renderLocateImage } = isRaspberryPi ? {} : require('./locate-image');
 
 let { PGHOST, PGDATABASE, PGUSER, PGPASSWORD, ENDPOINT_ID, NAVIONICS_DICT, HIFLEET_COOKIE } = process.env;
 PGPASSWORD = decodeURIComponent(PGPASSWORD);
@@ -192,27 +195,29 @@ const getDataAndSaveToDB = async (ship) => {
         console.error(`Error fetching data for ship ${ship.name_en}:`, error.message);
     }
 };
-apiRouter.get('/locate-image', async (req, res) => {
-    const lat = parseFloat(req.query.lat);
-    const lon = parseFloat(req.query.lon);
-    if (Number.isNaN(lat) || Number.isNaN(lon)) {
-        res.status(400).json({ error: 'lat/lon required and must be numbers' });
-        return;
-    }
-    try {
-        const png = await renderLocateImage({
-            lat,
-            lon,
-            name: req.query.name,
-            time: req.query.time,
-            navionicsDict: NAVIONICS_DICT,
-        });
-        res.type('png').send(png);
-    } catch (error) {
-        console.error('Failed to render locate image:', error);
-        res.status(500).json({ error: 'Failed to render locate image' });
-    }
-});
+if (!isRaspberryPi) {
+    apiRouter.get('/locate-image', async (req, res) => {
+        const lat = parseFloat(req.query.lat);
+        const lon = parseFloat(req.query.lon);
+        if (Number.isNaN(lat) || Number.isNaN(lon)) {
+            res.status(400).json({ error: 'lat/lon required and must be numbers' });
+            return;
+        }
+        try {
+            const png = await renderLocateImage({
+                lat,
+                lon,
+                name: req.query.name,
+                time: req.query.time,
+                navionicsDict: NAVIONICS_DICT,
+            });
+            res.type('png').send(png);
+        } catch (error) {
+            console.error('Failed to render locate image:', error);
+            res.status(500).json({ error: 'Failed to render locate image' });
+        }
+    });
+}
 
 // Use the router with /api prefix
 app.use('/api', apiRouter);
