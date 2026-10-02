@@ -14,6 +14,10 @@ services:
       NAVIONICS_DICT: /app/tiles
     volumes:
       - ${NAVIONICS_DICT_HOST}:/app/tiles:ro
+    ports:
+      # 仅绑定本机回环地址，供宿主机上的 locate_ship skill 调用
+      # /api/locate-image 生成定位图，不对公网暴露、不走 Traefik/BasicAuth
+      - "127.0.0.1:18730:3000"
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
