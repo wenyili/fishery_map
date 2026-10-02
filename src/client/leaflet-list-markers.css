@@ -15,8 +15,9 @@
 	min-width:26px;
 	min-height:26px;
 
-    max-height: 500px;
-    overflow: auto;
+	/* 顶部预留约220px给右上角信息面板，避免矮屏（如树莓派小屏）上两者重叠 */
+	max-height: min(500px, calc(100vh - 220px));
+	overflow: auto;
 }
 .list-markers .list-markers-toggle {
 	display: none;
@@ -76,7 +77,7 @@
 	.list-markers {
 		margin-left: 10px;
 		margin-top: 10px;
-		max-height: 40vh;
+		max-height: min(40vh, calc(100vh - 220px));
 	}
 	.list-markers-li img {
 		width: 13px;
