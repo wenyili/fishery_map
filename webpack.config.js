@@ -10,6 +10,7 @@ module.exports = {
     path: path.resolve(__dirname, 'public'),
     // contenthash让文件名随内容变化，避免老浏览器（树莓派Chromium）缓存旧bundle
     filename: '[name].[contenthash].bundle.js',
+    clean: true, // 构建时清理旧的bundle文件
   },
   module: {
     rules: [
