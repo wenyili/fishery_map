@@ -20,11 +20,11 @@
 	overflow: auto;
 }
 
-/* 视口高度≤900px时收窄列表：顶部预留260px给右上角信息面板（老Chromium行高偏大），
+/* 视口高度≤900px时收窄列表：顶部预留300px给右上角信息面板（含边框/阴影，老Chromium行高偏大），
    保证 信息面板高度+列表高度 < 视口高度，任何屏幕都不重叠 */
 @media (max-height: 900px) {
 	.list-markers {
-		max-height: calc(100vh - 260px);
+		max-height: calc(100vh - 300px);
 	}
 }
 .list-markers .list-markers-toggle {
